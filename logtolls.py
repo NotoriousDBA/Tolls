@@ -12,7 +12,7 @@ curs = None
 # We got a signal telling us to quit.
 def handler (signum, frame):
     logging.info('received signal {}'.format(str(signum)))
-    shutdown
+    shutdown()
 
 # We got a signal telling us to quit. Do a little housekeeping first.
 def shutdown ():
@@ -55,7 +55,7 @@ def log_error (toll, curs):
         curs.execute(insertSQL, toll)
     except Exception as e:
         logging.critical('insert into error_log failed: {}'.format(str(e)))
-        shutdown
+        shutdown()
 
 # Get toll and time information for an on/off ramp pair. This also gets us status information
 # for the reversible lanes when the trip defined by the ramps traverses those lanes.
@@ -66,7 +66,7 @@ def fetch_toll (trip):
     try:
         # Call the web API, and parse the JSON it returns.
         with urllib.request.urlopen(url.format(ramp_on=trip['ramp_on'], ramp_off=trip['ramp_off'])) as response:
-            toll = json.loads(response.read())
+            toll = json.loads(response.read().decode('utf-8'))
 
         # Make sure we have an error entry, and that it's an int.
         # An error of 0 just means no error.
@@ -160,7 +160,7 @@ def log_toll(toll, curs):
             curs.execute(updateSQL, toll)
         except Exception as e:
             logging.critical('update of toll_log failed: {}'.format(str(e)))
-            shutdown
+            shutdown()
 
         toll_log_id = toll['toll_log_id']
     else:
@@ -171,7 +171,7 @@ def log_toll(toll, curs):
             toll_log_id = curs.fetchone()[0]
         except Exception as e:
             logging.critical('insert into toll_log failed: {}'.format(str(e)))
-            shutdown
+            shutdown()
 
     # Return the id of the new/updated toll record.
     return toll_log_id
@@ -196,7 +196,7 @@ def log_time(toll, curs):
             curs.execute(updateSQL, toll)
         except Exception as e:
             logging.critical('update of time_log failed: {}'.format(str(e)))
-            shutdown
+            shutdown()
 
         time_log_id = toll['time_log_id']
     else:
@@ -206,7 +206,7 @@ def log_time(toll, curs):
             time_log_id = curs.fetchone()[0]
         except Exception as e:
             logging.critical('insert into time_log failed: {}'.format(str(e)))
-            shutdown
+            shutdown()
 
     return time_log_id
 
@@ -229,7 +229,7 @@ def log_reversible(reversible, curs):
             curs.execute(updateSQL, reversible)
         except Exception as e:
             logging.critical('update of reversible_log failed: {}'.format(str(e)))
-            shutdown
+            shutdown()
 
         reversible_log_id = reversible['reversible_log_id']
     else:
@@ -239,7 +239,7 @@ def log_reversible(reversible, curs):
             reversible_log_id = curs.fetchone()[0]
         except Exception as e:
             logging.critical('insert into reversible_log failed: {}'.format(str(e)))
-            shutdown
+            shutdown()
 
     return reversible_log_id
 
@@ -324,7 +324,8 @@ def log_reversible_status(reversible, log_date, curs):
 
 # The main body of the program.
 def main():
-    logging.basicConfig(filename='/var/run/tollogger/tollogger.log', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', \
+	filename='/var/run/tollogger/tollogger.log', level=logging.INFO)
     logging.info('logger started')
 
     # Catch these signals, so we can shut down cleanly.
@@ -338,12 +339,12 @@ def main():
 
     try:
         # Get a connection to the database, and a cursor.
-        conn = mysql.connector.connect(database='tolls', autocommit=True)
+        conn = mysql.connector.connect(user='tollogger', database='tolls', autocommit=True)
         curs = conn.cursor()
         logging.info('connected to database')
     except Exception as e:
         logging.critical('database connection failed: {}'.format(str(e)))
-        shutdown
+        shutdown()
 
     # The trips we're going to track the tolls and time for.
     trips = [{'ramp_on':182, 'ramp_off':191}, {'ramp_on':191, 'ramp_off':182}]

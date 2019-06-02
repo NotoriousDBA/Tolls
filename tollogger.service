@@ -1,0 +1,46 @@
+#
+# /etc/systemd/system/tollogger.service
+#
+
+[Unit]
+Description=Logger for 495/95 Express Lanes
+
+After=mariadb.service
+
+StartLimitBurst=60
+StartLimitIntervalSec=600
+
+[Install]
+WantedBy=multi-user.target
+Alias=toll.service
+Alias=tolls.service
+
+
+[Service]
+
+Type=simple
+
+User=tollogger
+
+# Prevent writes to /usr, /boot, and /etc
+ProtectSystem=full
+# Prevent accessing /home, /root and /run/user
+ProtectHome=true
+# Execute pre and post scripts as root, otherwise it does it as User=
+PermissionsStartOnly=true
+
+ExecStart=/var/run/tollogger/logtolls.py
+
+KillSignal=SIGTERM
+
+# Don't want to see an automated SIGKILL ever
+SendSIGKILL=no
+
+# Restart crashed server only, on-failure would also restart, for example, when
+# my.cnf contains unknown option
+Restart=always
+RestartSec=5s
+
+UMask=002
+
+PrivateTmp=false
