@@ -9,5 +9,6 @@ setup(
     install_requires=[
         'flask',
         'mysql-connector-python',
+        'waitress',
     ],
 )

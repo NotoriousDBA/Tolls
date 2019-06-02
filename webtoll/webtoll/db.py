@@ -5,6 +5,7 @@ from flask import current_app, g
 def get_db():
     if 'db' not in g:
         g.db = mysql.connector.connect(
+            user=current_app.config['DBUSER'],
             database=current_app.config['DBNAME'],
             autocommit=True,
         )
