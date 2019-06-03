@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageTk
 import tkinter as tk
 
 def get_history (tolls, trip):
-    toll_url = 'http://centralnode.local:5000/gettollprices/{:n}/{:n}/{:n}'
+    toll_url = 'http://urbanjaguar.org:8080/gettollprices/{:n}/{:n}/{:n}'
     toll_url = toll_url.format(trip['ramp_on'], trip['ramp_off'], trip['hist_minutes'])
 
     minute_delta = timedelta(minutes=1)
